@@ -50,7 +50,7 @@ class StompHandler {
     try {
       channel = await platform.connect(config);
       channel.stream.listen(_onData, onError: _onError, onDone: _onDone);
-      _connectToStomp();
+      await _connectToStomp();
     } on WebSocketChannelException catch (err) {
       if (config.reconnectDelay == 0) {
         _onError(err);
@@ -132,8 +132,8 @@ class StompHandler {
     _receiptWatchers[receiptId] = callback;
   }
 
-  void _connectToStomp() {
-    var connectHeaders = config.stompConnectHeaders ?? {};
+  void _connectToStomp() async {
+    var connectHeaders = await config.stompConnectHeaders() ?? {};
     connectHeaders['accept-version'] = ['1.0', '1.1', '1.2'].join(',');
     connectHeaders['heart-beat'] =
         [config.heartbeatOutgoing, config.heartbeatIncoming].join(',');

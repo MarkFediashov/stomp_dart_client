@@ -5,6 +5,8 @@ import 'package:stomp_dart_client/sock_js/sock_js_utils.dart';
 import 'package:stomp_dart_client/stomp.dart';
 import 'package:stomp_dart_client/stomp_frame.dart';
 
+typedef StopHeaderCompute = Future<Map<String, String>> Function();
+
 class StompConfig {
   final String url;
 
@@ -27,7 +29,7 @@ class StompConfig {
   final Duration connectionTimeout;
 
   /// Headers to be passed when connecting to STOMP
-  final Map<String, String> stompConnectHeaders;
+  final StopHeaderCompute stompConnectHeaders;
 
   /// Headers to be passed when connecting to WebSocket
   final Map<String, dynamic> webSocketConnectHeaders;
@@ -63,7 +65,7 @@ class StompConfig {
   /// Callback for debug messages
   final Function(String) onDebugMessage;
 
-  const StompConfig(
+  StompConfig(
       {@required this.url,
       this.reconnectDelay = 5000,
       this.heartbeatIncoming = 5000,

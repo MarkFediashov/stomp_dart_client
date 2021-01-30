@@ -48,6 +48,8 @@ class StompClient {
       return;
     }
 
+    _handler?.dispose();
+
     _handler = StompHandler(
         config: config.copyWith(onConnect: (_, frame) {
       if (!_isActive) {
