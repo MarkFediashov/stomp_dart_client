@@ -15,23 +15,23 @@ import 'src/_connect_api.dart'
     if (dart.library.io) 'src/_connect_io.dart' as platform;
 
 class StompHandler {
-  WebSocketChannel channel;
+  WebSocketChannel? channel;
   final StompConfig config;
 
-  Parser _parser;
+  late Parser _parser;
   bool _connected = false;
   int _currentReceiptIndex = 0;
   int _currentSubscriptionIndex = 0;
 
-  final Map<String, Function> _receiptWatchers = {};
-  final Map<String, Function> _subscriptionWatcher = {};
+  final Map<String?, Function> _receiptWatchers = {};
+  final Map<String?, Function> _subscriptionWatcher = {};
 
-  DateTime _lastServerActivity;
+  late DateTime _lastServerActivity;
 
-  Timer _heartbeatSender;
-  Timer _heartbeatReceiver;
+  Timer? _heartbeatSender;
+  Timer? _heartbeatReceiver;
 
-  StompHandler({@required this.config}) {
+  StompHandler({required this.config}) {
     if (config.useSockJS) {
       // use SockJS parser
       _parser = SockJSParser(
@@ -49,7 +49,7 @@ class StompHandler {
   void start() async {
     try {
       channel = await platform.connect(config);
-      channel.stream.listen(_onData, onError: _onError, onDone: _onDone);
+      channel!.stream.listen(_onData, onError: _onError, onDone: _onDone);
       await _connectToStomp();
     } on WebSocketChannelException catch (err) {
       if (config.reconnectDelay == 0) {
@@ -79,10 +79,10 @@ class StompHandler {
     }
   }
 
-  Function({Map<String, String> unsubscribeHeaders}) subscribe(
-      {@required String destination,
-      @required Function(StompFrame) callback,
-      Map<String, String> headers}) {
+  Function({Map<String, String>? unsubscribeHeaders}) subscribe(
+      {required String destination,
+      required Function(StompFrame) callback,
+      Map<String, String>? headers}) {
     headers = headers ?? {};
 
     if (!headers.containsKey('id')) {
@@ -93,11 +93,11 @@ class StompHandler {
 
     _transmit(command: 'SUBSCRIBE', headers: headers);
 
-    return ({Map<String, String> unsubscribeHeaders}) {
+    return ({Map<String, String>? unsubscribeHeaders}) {
       unsubscribeHeaders = unsubscribeHeaders ?? {};
 
       if (!unsubscribeHeaders.containsKey('id')) {
-        unsubscribeHeaders['id'] = headers['id'];
+        unsubscribeHeaders['id'] = headers!['id']!;
       }
       _subscriptionWatcher.remove(unsubscribeHeaders['id']);
 
@@ -106,34 +106,34 @@ class StompHandler {
   }
 
   void send(
-      {@required String destination,
-      String body,
-      Uint8List binaryBody,
-      Map<String, String> headers}) {
+      {required String destination,
+      String? body,
+      Uint8List? binaryBody,
+      Map<String, String>? headers}) {
     headers = headers ?? {};
     headers['destination'] = destination;
     _transmit(
         command: 'SEND', body: body, binaryBody: binaryBody, headers: headers);
   }
 
-  void ack({@required String id, Map<String, String> headers}) {
+  void ack({required String id, Map<String, String>? headers}) {
     headers = headers ?? {};
     headers['id'] = id;
     _transmit(command: 'ACK', headers: headers);
   }
 
-  void nack({@required String id, Map<String, String> headers}) {
+  void nack({required String id, Map<String, String>? headers}) {
     headers = headers ?? {};
     headers['id'] = id;
     _transmit(command: 'NACK', headers: headers);
   }
 
-  void watchForReceipt(String receiptId, Function(StompFrame) callback) {
+  void watchForReceipt(String? receiptId, Function(StompFrame) callback) {
     _receiptWatchers[receiptId] = callback;
   }
 
-  void _connectToStomp() async {
-    var connectHeaders = await config.stompConnectHeaders() ?? {};
+  Future<void> _connectToStomp() async {
+    var connectHeaders = await config.stompConnectHeaders!() ?? {};
     connectHeaders['accept-version'] = ['1.0', '1.1', '1.2'].join(',');
     connectHeaders['heart-beat'] =
         [config.heartbeatOutgoing, config.heartbeatIncoming].join(',');
@@ -154,10 +154,10 @@ class StompHandler {
   }
 
   void _transmit(
-      {String command,
-      Map<String, String> headers,
-      String body,
-      Uint8List binaryBody}) {
+      {String? command,
+      Map<String, String>? headers,
+      String? body,
+      Uint8List? binaryBody}) {
     final frame = StompFrame(
         command: command, headers: headers, body: body, binaryBody: binaryBody);
 
@@ -165,7 +165,7 @@ class StompHandler {
 
     config.onDebugMessage('>>> ' + serializedFrame.toString());
 
-    channel.sink.add(serializedFrame);
+    channel!.sink.add(serializedFrame);
   }
 
   void _onError(error) {
@@ -209,14 +209,14 @@ class StompHandler {
   void _onConnectFrame(StompFrame frame) {
     _connected = true;
 
-    if (frame.headers['version'] != '1.0') {
+    if (frame.headers!['version'] != '1.0') {
       _parser.escapeHeaders = true;
     } else {
       _parser.escapeHeaders = false;
     }
 
-    if (frame.headers['version'] != '1.0' &&
-        frame.headers.containsKey('heart-beat')) {
+    if (frame.headers!['version'] != '1.0' &&
+        frame.headers!.containsKey('heart-beat')) {
       _setupHeartbeat(frame);
     }
 
@@ -224,19 +224,19 @@ class StompHandler {
   }
 
   void _onMessageFrame(StompFrame frame) {
-    final subscriptionId = frame.headers['subscription'];
+    final subscriptionId = frame.headers!['subscription'];
 
     if (_subscriptionWatcher.containsKey(subscriptionId)) {
-      _subscriptionWatcher[subscriptionId](frame);
+      _subscriptionWatcher[subscriptionId]!(frame);
     } else {
       config.onUnhandledMessage(frame);
     }
   }
 
   void _onReceiptFrame(StompFrame frame) {
-    final receiptId = frame.headers['receipt-id'];
+    final receiptId = frame.headers!['receipt-id'];
     if (_receiptWatchers.containsKey(receiptId)) {
-      _receiptWatchers[receiptId](frame);
+      _receiptWatchers[receiptId]!(frame);
       _receiptWatchers.remove(receiptId);
     } else {
       config.onUnhandledReceipt(frame);
@@ -252,7 +252,7 @@ class StompHandler {
   }
 
   void _setupHeartbeat(StompFrame frame) {
-    final serverHeartbeats = frame.headers['heart-beat'].split(',');
+    final serverHeartbeats = frame.headers!['heart-beat']!.split(',');
     final serverOutgoing = int.parse(serverHeartbeats[0]);
     final serverIncoming = int.parse(serverHeartbeats[1]);
     if (config.heartbeatOutgoing > 0 && serverIncoming > 0) {
@@ -261,9 +261,9 @@ class StompHandler {
       _heartbeatSender = Timer.periodic(Duration(milliseconds: ttl), (_) {
         config.onDebugMessage('>>> PING');
         if (config.useSockJS) {
-          channel.sink.add('["\\n"]');
+          channel!.sink.add('["\\n"]');
         } else {
-          channel.sink.add('\n');
+          channel!.sink.add('\n');
         }
       });
     }

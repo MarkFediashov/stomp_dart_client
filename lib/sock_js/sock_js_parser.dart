@@ -6,14 +6,14 @@ import 'package:stomp_dart_client/stomp_frame.dart';
 import 'package:stomp_dart_client/stomp_parser.dart';
 
 class SockJSParser implements Parser {
-  StompParser _stompParser;
+  late StompParser _stompParser;
 
   final Function onDone;
 
   SockJSParser(
-      {@required Function(StompFrame) onStompFrame,
-      Function onPingFrame,
-      @required this.onDone}) {
+      {required Function(StompFrame) onStompFrame,
+      Function? onPingFrame,
+      required this.onDone}) {
     _stompParser = StompParser(onStompFrame, onPingFrame);
   }
 
@@ -80,7 +80,7 @@ class SockJSParser implements Parser {
   }
 
   @override
-  bool escapeHeaders = false;
+  bool? escapeHeaders = false;
 
   @override
   dynamic serializeFrame(StompFrame frame) {

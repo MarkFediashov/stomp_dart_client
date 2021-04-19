@@ -42,12 +42,12 @@ void main() {
         }
       ''', stayAlive: true);
 
-      int port = await streamChannel.stream.first;
+      int? port = await (streamChannel.stream.first as FutureOr<int?>);
 
-      StompClient client;
+      late StompClient client;
       dynamic onWebSocketDone = expectAsync0(() {}, count: 2);
       var n = 0;
-      dynamic onConnect = expectAsync2((_, frame) {
+      dynamic onConnect = expectAsync2((dynamic _, dynamic frame) {
         if (n == 1) {
           client.deactivate();
         }
@@ -66,13 +66,13 @@ void main() {
 
     test('attempts to reconnect indefinitely when server is unavailable',
         () async {
-      StompClient client;
+      late StompClient client;
       var n = 0;
       dynamic onWebSocketDone = expectAsync0(() {
         if (n == 3) client.deactivate();
         n++;
       }, count: 4);
-      dynamic onConnect = expectAsync2((_, frame) {}, count: 0);
+      dynamic onConnect = expectAsync2((dynamic _, dynamic frame) {}, count: 0);
 
       client = StompClient(
           config: StompConfig(
@@ -118,22 +118,22 @@ void main() {
         }
       ''', stayAlive: true);
 
-      int port = await streamChannel.stream.first;
+      int? port = await (streamChannel.stream.first as FutureOr<int?>);
 
-      StompClient client;
+      late StompClient client;
       dynamic onWebSocketDone = expectAsync0(() {}, count: 1);
-      dynamic onDisconnect = expectAsync1((frame) {
+      dynamic onDisconnect = expectAsync1((dynamic frame) {
         expect(client.connected, isFalse);
         expect(frame.command, 'RECEIPT');
         expect(frame.headers.length, 1);
         expect(frame.headers['receipt-id'], 'disconnect-0');
       }, count: 1);
-      dynamic onConnect = expectAsync2((_, frame) {
+      dynamic onConnect = expectAsync2((dynamic _, dynamic frame) {
         Timer(Duration(milliseconds: 500), () {
           client.deactivate();
         });
       }, count: 1);
-      dynamic onError = expectAsync1((_) {}, count: 0);
+      dynamic onError = expectAsync1((dynamic _) {}, count: 0);
 
       client = StompClient(
           config: StompConfig(

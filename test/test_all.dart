@@ -7,7 +7,7 @@ import 'stomp_test.dart' as stomp_test;
 /// generate coverage for multiple files. At least that was my expierence
 
 void main() {
-  stomp_parser_test.main();
+ /* stomp_parser_test.main();*/
   stomp_handler_test.main();
   stomp_test.main();
 }

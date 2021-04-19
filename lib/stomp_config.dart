@@ -26,20 +26,20 @@ class StompConfig {
 
   /// Connection timeout. If specified the connection will will be dropped after
   /// the timeout and depending on the [reconnectDelay] it will try again
-  final Duration connectionTimeout;
+  final Duration? connectionTimeout;
 
   /// Headers to be passed when connecting to STOMP
-  final StopHeaderCompute stompConnectHeaders;
+  final StopHeaderCompute? stompConnectHeaders;
 
   /// Headers to be passed when connecting to WebSocket
-  final Map<String, dynamic> webSocketConnectHeaders;
+  final Map<String, dynamic>? webSocketConnectHeaders;
 
   /// Asynchronous function to be executed before we connect
   /// the socket
-  final Future<void> Function() beforeConnect;
+  final Future<void>? Function() beforeConnect;
 
   /// Callback for when STOMP has successulfy connected
-  final Function(StompClient, StompFrame) onConnect;
+  final Function(StompClient?, StompFrame?) onConnect;
 
   /// Callback for when STOMP has disconnected
   final Function(StompFrame) onDisconnect;
@@ -66,7 +66,7 @@ class StompConfig {
   final Function(String) onDebugMessage;
 
   StompConfig(
-      {@required this.url,
+      {required this.url,
       this.reconnectDelay = 5000,
       this.heartbeatIncoming = 5000,
       this.heartbeatOutgoing = 5000,
@@ -86,7 +86,7 @@ class StompConfig {
       this.useSockJS = false});
 
   StompConfig.SockJS({
-    @required String url,
+    required String url,
     this.reconnectDelay = 5000,
     this.heartbeatIncoming = 5000,
     this.heartbeatOutgoing = 5000,
@@ -107,24 +107,24 @@ class StompConfig {
         url = SockJsUtils().generateTransportUrl(url);
 
   StompConfig copyWith(
-          {String url,
-          int reconnectDelay,
-          int heartbeatIncoming,
-          int heartbeatOutgoing,
-          Duration connectionTimeout,
-          bool useSockJS,
-          Map<String, String> stompConnectHeaders,
-          Map<String, dynamic> webSocketConnectHeaders,
-          Future<void> Function() beforeConnect,
-          Function(StompClient, StompFrame) onConnect,
-          Function(StompFrame) onStompError,
-          Function(StompFrame) onDisconnect,
-          Function(StompFrame) onUnhandledFrame,
-          Function(StompFrame) onUnhandledMessage,
-          Function(StompFrame) onUnhandledReceipt,
-          Function(dynamic) onWebSocketError,
-          Function() onWebSocketDone,
-          Function(String) onDebugMessage}) =>
+          {String? url,
+          int? reconnectDelay,
+          int? heartbeatIncoming,
+          int? heartbeatOutgoing,
+          Duration? connectionTimeout,
+          bool? useSockJS,
+          Map<String, String>? stompConnectHeaders,
+          Map<String, dynamic>? webSocketConnectHeaders,
+          Future<void> Function()? beforeConnect,
+          Function(StompClient?, StompFrame?)? onConnect,
+          Function(StompFrame)? onStompError,
+          Function(StompFrame)? onDisconnect,
+          Function(StompFrame)? onUnhandledFrame,
+          Function(StompFrame)? onUnhandledMessage,
+          Function(StompFrame)? onUnhandledReceipt,
+          Function(dynamic)? onWebSocketError,
+          Function()? onWebSocketDone,
+          Function(String)? onDebugMessage}) =>
       StompConfig(
           url: url ?? this.url,
           reconnectDelay: reconnectDelay ?? this.reconnectDelay,
@@ -134,7 +134,7 @@ class StompConfig {
           useSockJS: useSockJS ?? this.useSockJS,
           webSocketConnectHeaders:
               webSocketConnectHeaders ?? this.webSocketConnectHeaders,
-          stompConnectHeaders: stompConnectHeaders ?? this.stompConnectHeaders,
+          stompConnectHeaders: stompConnectHeaders as Future<Map<String, String>> Function()? ?? this.stompConnectHeaders,
           beforeConnect: beforeConnect ?? this.beforeConnect,
           onConnect: onConnect ?? this.onConnect,
           onStompError: onStompError ?? this.onStompError,
@@ -147,5 +147,5 @@ class StompConfig {
           onDebugMessage: onDebugMessage ?? this.onDebugMessage);
 
   static void _noOp([_, __]) => null;
-  static Future<dynamic> _noOpFuture() => null;
+  static Future<dynamic>? _noOpFuture() => null;
 }
