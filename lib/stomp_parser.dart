@@ -126,8 +126,8 @@ class StompParser implements Parser {
 
   void _collectFixedSizeBody(int byte) {
     _bodyBytesRemaining = _bodyBytesRemaining! - 1;
-    if (_bodyBytesRemaining == 0) {
 
+    if (_bodyBytesRemaining! + 1 == 0) {
       _consumeBody();
       return;
     }
